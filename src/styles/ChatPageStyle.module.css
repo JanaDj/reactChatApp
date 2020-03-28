@@ -1,0 +1,92 @@
+.header {
+  background-color: rgb(250, 247, 91) !important;
+}
+.messageTextArea {
+  width: 80% !important;
+  margin-right: 5px !important;
+}
+
+.btn {
+  float: right !important;
+}
+
+.chatWrapper {
+  width: 100%;
+  overflow: auto;
+}
+.chatContainer {
+  width: 70%;
+  float: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-height: 700px;
+}
+
+.chatListContainer {
+  width: 25%;
+  float: right;
+  overflow-y: auto;
+}
+
+.messagesContainer {
+  overflow-y: auto;
+  height: 600px;
+}
+.userList {
+  overflow-y: auto;
+  max-height: 700px;
+}
+
+/* message styles */
+.ownMsg,
+.otherMsg,
+.historyMsg {
+  width: 60%;
+  margin: 10px;
+  padding: 20px;
+  word-wrap: break-word;
+  border-radius: 30px;
+  -webkit-border-radius: 30px;
+  -moz-border-radius: 30px;
+  font-family: cursive;
+  -webkit-box-shadow: 3px 6px 21px -1px rgba(0, 0, 0, 0.7);
+  -moz-box-shadow: 3px 6px 21px -1px rgba(0, 0, 0, 0.7);
+  box-shadow: 3px 6px 21px -1px rgba(0, 0, 0, 0.7);
+}
+.ownMsg {
+  margin-right: 20%;
+  margin-left: 15%;
+  position: relative;
+}
+
+.otherMsg {
+  background-color: white;
+  margin-left: 20%;
+  margin-right: 10%;
+  position: relative;
+}
+
+.historyMsg {
+  background-color: lightgray;
+  margin-left: 20%;
+  margin-right: 10%;
+  position: relative;
+}
+
+.chatInfo {
+  padding: 5px;
+  margin: 5px 35%;
+  text-align: center;
+  width: 30%;
+}
+
+.userListContainer {
+  height: 40%;
+  overflow-y: auto;
+}
+
+.privateChatsContainer {
+  height: 40%;
+  overflow-y: auto;
+}
