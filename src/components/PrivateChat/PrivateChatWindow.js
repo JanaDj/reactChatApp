@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PrivateChatMessage from "../PrivateChat/PrivateChatMessage";
-import MessagesContainer from "../ChatPage/MessagesContainer";
+import PrivateMessageContainer from "../PrivateChat/PrivateMesssageContainer";
 import PrivateChatHeader from "./PrivateChatHeader";
 import styles from "../../styles/PrivateChatWindowStyle.module.css";
 
@@ -10,23 +10,20 @@ function PrivateChatWindow({ name, senderName, socket }) {
     message: "",
     name: ""
   });
-  const [messages, setMessages] = useState({});
+  const [messages, setMessages] = useState({
+    privateChats: [
+      {
+        name: "jana3",
+        messages: []
+      }
+    ]
+  });
 
-  // triggered on component load
-  // useEffect(() => {
-  //   socket = io(ENDPOINT);
-
-  //   return () => {
-  //     socket.off();
-  //   };
-  // }, []);
-
-  // handle messages
   // handling messages
   useEffect(() => {
     socket.on("private-chat-message", data => {
-      console.log("primljena privatna poruka");
-      setMessages([...messages, data]);
+      // setMessages([...messages, data]);
+      saveMessage(data.name, data);
     });
   }, [messages, socket]);
   /**
@@ -52,10 +49,9 @@ function PrivateChatWindow({ name, senderName, socket }) {
   const sendMessage = event => {
     event.preventDefault();
     if (message) {
-      setMessages([...messages, { message: message, name: senderName }]);
-      console.log(
-        "ime koje se prosledjuje u emitu private messagea je: " + name
-      );
+      saveMessage(name, message);
+      // setMessages([...messages, { message: message, name: senderName }]);
+
       socket.emit("send-private-chat-message", message, name, () => {
         setMessage({
           ...message,
@@ -65,6 +61,55 @@ function PrivateChatWindow({ name, senderName, socket }) {
     }
   };
 
+  /**
+   * Function to handle new message
+   * Function first checks if chat already exists in the messages object
+   * if it does, it appends the messages array value of the key with the new message
+   * if it doesnt, messages object is appended with the property of the new chat and new messages is stored in the messages array (value)
+   * @param {string} chatName , name of the chat (key for the messages obj property)
+   * @param {object} message , object containing sender and message text
+   */
+  const saveMessage = (chatName, message) => {
+    const chatsArray = messages.privateChats;
+    const exists = chatsArray.find(chatObj => chatObj.name === chatName);
+    if (exists) {
+      setMessages(prevState => ({
+        privateChats: prevState.privateChats.map(privateChat =>
+          privateChat.name === chatName
+            ? {
+                ...privateChat,
+                messages: [...prevState.privateChats, message]
+              }
+            : privateChat
+        )
+      }));
+      console.log(
+        "iz ifa u saveMessage: " +
+          messages.privateChats[0].name +
+          messages.privateChats[0].messages
+      );
+    } else {
+      setMessages(prevState => ({
+        privateChats: [
+          ...prevState.privateChats,
+          {
+            name: chatName,
+            messages: [...prevState.privateChats, message]
+          }
+        ]
+      }));
+      console.log(
+        "iz elsa u saveMessage: " +
+          messages.privateChats[0].name +
+          messages.privateChats[0].messages
+      );
+    }
+  };
+
+  // } else {
+
+  // }
+
   return (
     <div className={styles.privateChatWindow}>
       <PrivateChatHeader name={name} onClick={handleTogglePrivateChat} />
@@ -72,7 +117,12 @@ function PrivateChatWindow({ name, senderName, socket }) {
         <div>
           {/* body */}
           <div className={styles.messageContainer}>
-            <MessagesContainer messages={messages} name={name} />
+            <PrivateMessageContainer
+              messages={messages.privateChats.find(
+                privateChat => privateChat.name === name
+              )}
+              name={name}
+            />
           </div>
           <PrivateChatMessage
             name={name}

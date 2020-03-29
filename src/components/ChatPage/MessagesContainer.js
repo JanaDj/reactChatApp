@@ -7,9 +7,8 @@ import ScrollToBottom from "react-scroll-to-bottom";
 function MessagesContainer({ messages, name }) {
   return (
     <ScrollToBottom>
-      {messages.map((msg, i) => (
-        <Message key={i} message={msg} name={name} />
-      ))}
+      {messages &&
+        messages.map((msg, i) => <Message key={i} message={msg} name={name} />)}
     </ScrollToBottom>
   );
 }
