@@ -4,6 +4,11 @@ module.exports = sequelize => {
   class ChatUser extends Sequelize.Model {}
   ChatUser.init(
     {
+      ID: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
       chatId: {
         type: Sequelize.INTEGER,
         allowNull: false,

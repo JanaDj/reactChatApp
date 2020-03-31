@@ -3,6 +3,7 @@ const app = express();
 const http = require("http").createServer(app);
 const io = (module.exports.io = require("socket.io")(http));
 const port = process.env.PORT || 3000;
+const cors = require("cors");
 
 // db reated
 const db = require("../db");
@@ -15,44 +16,36 @@ const sequelize = new Sequelize("chatapp", "root", "", {
   dialect: "mysql"
 });
 
+app.use(cors());
+app.options("*", cors());
 const router = require("./router");
+app.use(express.json());
 app.use(router);
+
 const socketManager = require("./socketManager");
 
 // socket logic
 io.on("connection", socketManager);
 
+// error handling
+app.use((req, res, next) => {
+  const err = new Error("Not Found");
+  res.status(404);
+  next(err);
+});
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  res.json({
+    error: {
+      message: err.message
+    }
+  });
+});
+
 (async () => {
   try {
-    await sequelize.authenticate();
-    await sequelize.sync({
-      force: true
-    });
-    // const newUser = await User.create({
-    //   username: "test",
-    //   password: "test"
-    // });
-
-    // // sequelize crud methods:
-
-    // // find one (by search condition)
-    // const message = await PublicChatMessage.findOne({
-    //   where: {
-    //     name: "jana"
-    //   }
-    // });
-
-    // // find all
-    // const messages = await PublicChatMessage.findAll();
-
-    // // find all can be filtered:
-    // const filteredMessages = await PublicChatMessage.findAll({
-    //   where: {
-    //     name: "jana2",
-    //     message: "hello"
-    //   },
-    //   order: [["id", "ASC"]]
-    // });
+    await db.sequelize.sync();
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = error.errors.map(err => err.message);
@@ -62,33 +55,6 @@ io.on("connection", socketManager);
     }
   }
 })();
-
-// mysql
-// create connection
-// const db = mysql.createConnection({
-//   host: "127.0.0.1",
-//   user: "root",
-//   password: "",
-//   database: "chatApp"
-// });
-
-// connection
-// db.connect(err => {
-//   if (err) {
-//     throw err;
-//   }
-//   console.log("Connection to the db successful");
-// });
-
-// create db
-// app.get("ceratedb", (req, res) => {
-//   let sql = "CREATE DATABASE db_name";
-//   db.query(sql, (err, result) => {
-//     if (err) throw err;
-//     console.log(result);
-//     res.send("Database created successfully");
-//   });
-// });
 
 /**
  * server gets started on the defined port

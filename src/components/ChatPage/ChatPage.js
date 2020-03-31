@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import ChatHeader from "./ChatHeader";
 import ChatMessage from "./ChatMessage";
 import UserList from "./UsersList";
 import MessagesContainer from "./MessagesContainer";
 import styles from "../../styles/ChatPageStyle.module.css";
 import PrivateChatWindow from "../PrivateChat/PrivateChatWindow";
-
-import queryString from "query-string";
+import { UserContext } from "../../Context/UserContext";
 import io from "socket.io-client";
 
 let socket;
 
-function ChatPage({ location }) {
+function ChatPage({ location, history }) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState({
     message: "",
@@ -21,20 +20,28 @@ function ChatPage({ location }) {
   const [users, setUsers] = useState([]);
   const [displayPrivateChat, setDisplayPrivateChat] = useState([]);
 
+  const { loggedInUser, updateLoggedInUser } = useContext(UserContext);
   const ENDPOINT = "http://127.0.0.1:3000";
 
   // triggered on component load
   useEffect(() => {
-    const _name = queryString.parse(location.search);
-    setName(_name.name);
     socket = io(ENDPOINT);
+    // temporary fix since context data is currently lost on page reload
+    if (!loggedInUser.username) {
+      // log in user again:
+      history.push(`/login`);
+    } else {
+      const _name = loggedInUser.username;
+      setName(loggedInUser.username);
+      // cadd user to public chat  (id of public chat is hardcoded to 1) (this is currently done in the db, logic for this will be added)
+      addUserToChat(1, loggedInUser.userId);
 
-    socket.emit("new-user", _name.name, error => {
-      if (error) {
-        alert("Error trying to connect to the chat");
-      }
-    });
-
+      socket.emit("new-user", _name, error => {
+        if (error) {
+          alert("Error trying to connect to the chat");
+        }
+      });
+    }
     return () => {
       socket.emit("user-disconnected", name);
       socket.off();
@@ -93,6 +100,27 @@ function ChatPage({ location }) {
   };
 
   /**
+   * Function to add chat-user relation to the chatuser table
+   * @param {int} chatId id of the chat user is joining
+   * @param {int} userId id of the user that is joining the chat
+   */
+  function addUserToChat(chatId, userId) {
+    fetch("http://127.0.0.1:3000/chatuser", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+        chatId,
+        userId
+      })
+    }).catch(error => {
+      //  handle error
+      console.log("error adding chat-user relation", error);
+    });
+  }
+  /**
    * Function to handle input onChange event
    * @param {*} target ,
    */
@@ -124,21 +152,6 @@ function ChatPage({ location }) {
     }
   };
 
-  // const sendPrivateMessage = (event, name) => {
-  //   event.preventDefault();
-  //   // if (privateMessage) {
-  //   //   setPrivateMessages([
-  //   //     ...privateMessages,
-  //   //     { message: message, name: name }
-  //   //   ]);
-  //   //   socket.emit("send-private-chat-message", privateMessage, name, () => {
-  //   //     setPrivateMessage({
-  //   //       ...privateMessage,
-  //   //       privateMessage: ""
-  //   //     });
-  //   //   });
-  //   // }
-  // };
   return (
     <div className="container">
       <ChatHeader />
