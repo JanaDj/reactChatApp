@@ -31,16 +31,19 @@ function ChatPage({ location, history }) {
       // log in user again:
       history.push(`/login`);
     } else {
-      const _name = loggedInUser.username;
       setName(loggedInUser.username);
-      // cadd user to public chat  (id of public chat is hardcoded to 1) (this is currently done in the db, logic for this will be added)
-      addUserToChat(1, loggedInUser.userId);
+      getPublicMessages();
 
-      socket.emit("new-user", _name, error => {
-        if (error) {
-          alert("Error trying to connect to the chat");
+      socket.emit(
+        "new-user",
+        loggedInUser.username,
+        loggedInUser.userId,
+        error => {
+          if (error) {
+            alert("Error trying to connect to the chat");
+          }
         }
-      });
+      );
     }
     return () => {
       socket.emit("user-disconnected", name);
@@ -90,7 +93,7 @@ function ChatPage({ location, history }) {
     event.preventDefault();
     if (message) {
       setMessages([...messages, { message: message, name: name }]);
-      socket.emit("send-chat-message", message, () => {
+      socket.emit("send-chat-message", message, loggedInUser.userId, () => {
         setMessage({
           ...message,
           message: ""
@@ -98,28 +101,50 @@ function ChatPage({ location, history }) {
       });
     }
   };
-
   /**
-   * Function to add chat-user relation to the chatuser table
-   * @param {int} chatId id of the chat user is joining
-   * @param {int} userId id of the user that is joining the chat
+   * Function to get chat history for public chat
+   * Function makes a GET request to the /getpublicmessages endpoint
+   * This end point returns array of messages
    */
-  function addUserToChat(chatId, userId) {
-    fetch("http://127.0.0.1:3000/chatuser", {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        chatId,
-        userId
+  function getPublicMessages() {
+    fetch("http://127.0.0.1:3000/getpublicmessages")
+      .then(response => {
+        return response.json();
       })
-    }).catch(error => {
-      //  handle error
-      console.log("error adding chat-user relation", error);
-    });
+      .then(data => {
+        console.log(data);
+        setMessages(data);
+        // data.array.forEach(element => {
+        //   setMessages({
+        //     ...messages,
+
+        //   })
+
+        // });
+        console.log(messages);
+      });
   }
+  // /**
+  //  * Function to add chat-user relation to the chatuser table
+  //  * @param {int} chatId id of the chat user is joining
+  //  * @param {int} userId id of the user that is joining the chat
+  //  */
+  // function addUserToChat(chatId, userId) {
+  //   fetch("http://127.0.0.1:3000/chatuser", {
+  //     method: "post",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Accept: "application/json"
+  //     },
+  //     body: JSON.stringify({
+  //       chatId,
+  //       userId
+  //     })
+  //   }).catch(error => {
+  //     //  handle error
+  //     console.log("error adding chat-user relation", error);
+  //   });
+  // }
   /**
    * Function to handle input onChange event
    * @param {*} target ,

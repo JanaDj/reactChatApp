@@ -15,11 +15,5 @@ db.models.Chat = require("./models/Chat.js")(sequelize);
 db.models.ChatUser = require("./models/ChatUser.js")(sequelize);
 db.models.Message = require("./models/Message.js")(sequelize);
 db.models.User = require("./models/User.js")(sequelize);
-// db.models.PublicChatMessage = require("./models/PublicChatMessage.js")(
-//   sequelize
-// );
-// db.models.PrivateChatMessage = require("./models/PrivateChatMessage.js")(
-//   sequelize
-// );
 
 module.exports = db;

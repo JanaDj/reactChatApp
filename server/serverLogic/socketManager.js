@@ -1,4 +1,6 @@
 const io = require("./server.js").io;
+const MessageDataManager = require("../db/dataManagement/MessageDataManager");
+const ChatUserDataManager = require("../db/dataManagement/ChatUserDataManager");
 const {
   addUser,
   removeUser,
@@ -19,23 +21,26 @@ module.exports = function(socket) {
    * socket event that is triggered if new user joins
    * 'user-connected' event gets broadcast emited to all other users (user that joined and triggered event doesn't get the user-connected event)
    */
-  socket.on("new-user", name => {
+  socket.on("new-user", async (name, userId) => {
     users[socket.id] = name;
     socket.broadcast.emit("user-connected", name);
     addUser({ id: socket.id, name });
     io.emit("roomData", { users: getUsers() });
+    // add user to the chat-user table
+    await ChatUserDataManager.createChatUser(1, userId);
   });
   /**
    * socket event that gets triggered on 'send-chat-message'
    * this event will broadcast emit the new 'chat-message' event and pass message information. This event gets sent to all other users but not the user sending the message
    */
-  socket.on("send-chat-message", (message, callback) => {
+  socket.on("send-chat-message", async (message, userId, callback) => {
     socket.broadcast.emit("chat-message", {
       message: message,
       name: users[socket.id]
     });
     callback();
     // add logic to store message history here
+    await MessageDataManager.createMessage(userId, 1, message);
   });
   /**
    * socket event that gets triggered on 'disconnect'

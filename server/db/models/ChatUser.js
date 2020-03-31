@@ -12,6 +12,10 @@ module.exports = sequelize => {
       chatId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: "chats",
+          key: "chatId"
+        },
         validate: {
           notEmpty: {
             msg: "Please provide value for 'chatId"
@@ -24,6 +28,10 @@ module.exports = sequelize => {
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: "users",
+          key: "userId"
+        },
         validate: {
           notEmpty: {
             msg: "Please provide value for 'userId'"

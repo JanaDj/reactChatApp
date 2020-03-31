@@ -1,5 +1,5 @@
-const db = require("./index");
-const { Message } = db.models;
+const db = require("../index");
+const { Message, User } = db.models;
 
 /**
  * Function to create a new chat message
@@ -56,9 +56,37 @@ async function getAllMessagesByChatId(chatId) {
   return messages;
 }
 
+// create messages with username (joined tables):
+async function getFormattedMessagesByChatId(chatId) {
+  const messages = await Message.findAll({
+    where: {
+      chatId
+    },
+    include: [
+      {
+        model: User,
+        required: true
+      }
+    ],
+    raw: true
+  });
+  // process messages before returning them:
+  const formattedMsgs = messages.map(message => {
+    console.log(message["User.userId"]);
+    return {
+      message: message.messageText,
+      name: message["User.username"]
+    };
+  });
+  return formattedMsgs;
+}
+User.hasMany(Message, { foreignKey: "userId" });
+Message.belongsTo(User, { foreignKey: "userId" });
+
 module.exports = {
   getAllMessages,
   getAllMessagesByUserId,
   getAllMessagesByChatId,
+  getFormattedMessagesByChatId,
   createMessage
 };

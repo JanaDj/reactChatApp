@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const UserDataManager = require("../db/dataManagement/UserDataManager");
 const ChatUserDataManager = require("../db/dataManagement/ChatUserDataManager");
+const MessageDataManager = require("../db/dataManagement/MessageDataManager");
 // const { addUser, removeUser, getUser, getUsers } = require("./users");
 
 // Handler function to wrap routes
@@ -102,6 +103,44 @@ router.post(
         message: "Please fill in all the required fields."
       });
     }
+  })
+);
+
+/**
+ * POST route for '/sendmessage'
+ * This endpoint is used to create a new message record
+ * Request body accepts 3 body parameters: chatId, userId and msgText
+ * If parameters are missing error 400 is thrown
+ * created message is returned in response
+ */
+router.post(
+  "/sendmessage",
+  asyncHandler(async (req, res) => {
+    if (req.body.chatId && req.body.userId && req.body.msgText) {
+      const message = await MessageDataManager.createMessage(
+        req.body.chatId,
+        req.body.userId,
+        req.body.msgText
+      );
+      res.status(201).json(message);
+    } else {
+      res.status(400).json({
+        message: "Please fill in all the required fields."
+      });
+    }
+  })
+);
+
+/**
+ * GET route for '/getpublicmessages'
+ * This endpoint is used to get all messages from public chat (main chat)
+ * Endpoint return array of messages
+ */
+router.get(
+  "/getpublicmessages",
+  asyncHandler(async (req, res) => {
+    const messages = await MessageDataManager.getFormattedMessagesByChatId(1);
+    res.status(201).json(messages);
   })
 );
 
