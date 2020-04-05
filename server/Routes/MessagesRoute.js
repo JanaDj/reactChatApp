@@ -61,7 +61,7 @@ router.post(
       res.status(201).json(message);
     } else {
       res.status(400).json({
-        message: "Please fill in all the required fields."
+        message: "Please fill in all the required fields.",
       });
     }
   })
@@ -94,4 +94,46 @@ router.get(
   })
 );
 
+/**
+ * GET route for '/getpublicmessages'
+ * This endpoint is used to get all messages from public chat (main chat)
+ * Endpoint return array of messages
+ */
+/**
+ * @swagger
+ *
+ * /api/v1/messages/getmessages/{chatId}:
+ *   get:
+ *     tags: [
+ *       "Messages" ]
+ *     summary: Use to get all chat messages for chat with specified id
+ *     consumes:
+ *       - application/json
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         schema:
+ *           type: integer
+ *         required:
+ *           - chatId
+ *         description: Numeric ID of the chat to get
+ *     responses:
+ *       200:
+ *         description: Messages retrieved successfully.
+ */
+router.get(
+  "/getmessages/:id",
+  asyncHandler(async (req, res) => {
+    if (req.params.id !== "" && req.params.id !== null) {
+      const messages = await MessageDataManager.getFormattedMessagesByChatId(
+        req.params.id
+      );
+      res.status(200).json(messages);
+    } else {
+      res.status(400).json({
+        message: "id field is required",
+      });
+    }
+  })
+);
 module.exports = router;

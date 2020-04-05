@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import PrivateChatMessage from "../PrivateChat/PrivateChatMessage";
 import PrivateMessageContainer from "../PrivateChat/PrivateMesssageContainer";
 import PrivateChatHeader from "./PrivateChatHeader";
 import styles from "../../styles/PrivateChatWindowStyle.module.css";
+import { UserContext } from "../../Context/UserContext";
 
 function PrivateChatWindow({ name, socket, chatId }) {
   console.log("chatid koji je dosao u privateChatWindow je: " + chatId);
   const [togglePrivateChat, setTogglePrivateChat] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const { loggedInUser, updateLoggedInUser } = useContext(UserContext);
 
+  // load chat history
+  useEffect(() => {
+    getChatMessages();
+  }, []);
   // handling messages
   useEffect(() => {
     socket.on("private-chat-message", ({ message, name, chatId }) => {
@@ -45,68 +51,57 @@ function PrivateChatWindow({ name, socket, chatId }) {
    * Function to handle onClick event to send public chat message
    * @param {*} event
    */
-  const sendMessage = (event, name) => {
+  const sendMessage = (event) => {
     event.preventDefault();
     if (message) {
-      // saveMessage(name, message);
       setMessages([
         ...messages,
         {
           message,
-          name,
+          name: loggedInUser.username,
           chatId,
         },
       ]);
-      // setMessages([...messages, { message: message, name: senderName }]);
 
-      socket.emit("send-private-chat-message", message, name, chatId, () => {
-        console.log("emitovan trigger za private message: " + message + name);
-        setMessage({
-          ...message,
-          message: "",
-        });
-      });
+      socket.emit(
+        "send-private-chat-message",
+        message,
+        name,
+        loggedInUser.userId,
+        chatId,
+        () => {
+          setMessage({
+            ...message,
+            message: "",
+          });
+        }
+      );
     }
   };
 
-  // /**
-  //  * Function to handle new message
-  //  * Function first checks if chat already exists in the messages object
-  //  * if it does, it appends the messages array value of the key with the new message
-  //  * if it doesnt, messages object is appended with the property of the new chat and new messages is stored in the messages array (value)
-  //  * @param {string} chatName , name of the chat (key for the messages obj property)
-  //  * @param {object} message , object containing sender and message text
-  //  */
-  // const saveMessage = (chatName, message) => {
-  //   const chatsArray = messages.privateChats;
-  //   const exists = chatsArray.find((chatObj) => chatObj.name === chatName);
-  //   if (exists) {
-  //     setMessages((prevState) => ({
-  //       privateChats: prevState.privateChats.map((privateChat) =>
-  //         privateChat.name === chatName
-  //           ? {
-  //               ...privateChat,
-  //               messages: [...prevState.privateChats, message],
-  //             }
-  //           : privateChat
-  //       ),
-  //     }));
-  //   } else {
-  //     setMessages((prevState) => ({
-  //       privateChats: [
-  //         ...prevState.privateChats,
-  //         {
-  //           name: chatName,
-  //           messages: [...prevState.privateChats, message],
-  //         },
-  //       ],
-  //     }));
-  //   }
-  // };
-
-  // } else {
-
-  // }
+  /**
+   * Function to get chat history for public chat
+   * Function makes a GET request to the /getpublicmessages endpoint
+   * This end point returns array of messages
+   */
+  function getChatMessages() {
+    fetch(`http://127.0.0.1:3000/api/v1/messages/getmessages/${chatId}`)
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        data.map((msg) => {
+          setMessages((prevState) => [
+            ...prevState,
+            {
+              message: msg.message,
+              name: msg.name,
+              chatId: chatId,
+            },
+          ]);
+        });
+      });
+  }
 
   return (
     <div className={styles.privateChatWindow}>
@@ -116,16 +111,12 @@ function PrivateChatWindow({ name, socket, chatId }) {
           {/* body */}
           <div className={styles.messageContainer}>
             <PrivateMessageContainer
-              // messages={messages.find(
-              //   (privateChat) => privateChat.chatId === chatId
-              // )}
               messages={messages}
               name={name}
               chatId={chatId}
             />
           </div>
           <PrivateChatMessage
-            name={name}
             message={message}
             onChange={handleChange}
             sendMessage={sendMessage}

@@ -178,6 +178,11 @@ function ChatPage({ location, history }) {
     }
   };
 
+  /**
+   * Function to close opened private chat
+   * @param {integer} chatId , chatId of the private chat to close
+   */
+  const closePrivateChat = (chatId) => {};
   return (
     <div className="container">
       <ChatHeader />
@@ -205,7 +210,6 @@ function ChatPage({ location, history }) {
                   key={i}
                   name={chat.senderName}
                   chatId={chat.chatId}
-                  senderName={name}
                 />
               ))}
           </div>

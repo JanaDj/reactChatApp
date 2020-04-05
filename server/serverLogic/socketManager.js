@@ -86,7 +86,7 @@ module.exports = function (socket) {
    */
   socket.on(
     "send-private-chat-message",
-    (message, msgReceiver, chatId, callback) => {
+    async (message, msgReceiver, userId, chatId, callback) => {
       console.log("server ima ovaj chatId: " + chatId);
       const receiverUser = getUserByName(msgReceiver);
       console.log("receiverUSer found by name: " + receiverUser.name);
@@ -96,8 +96,9 @@ module.exports = function (socket) {
         name: users[socket.id],
         chatId,
       });
-      // callback();
+      callback();
       // add logic to store message history here
+      await MessageDataManager.createMessage(userId, chatId, message);
     }
   );
 };
