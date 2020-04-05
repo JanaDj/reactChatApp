@@ -34,7 +34,7 @@ function LoginPage() {
    */
   const validateUserCredentials = () => {
     if (user.username !== "" && user.password !== "") {
-      fetch("http://127.0.0.1:3000/authenticate", {
+      fetch("http://127.0.0.1:3000/api/v1/auth/authenticate", {
         method: "post",
         headers: {
           "Content-Type": "application/json",
@@ -49,7 +49,6 @@ function LoginPage() {
         .then(object => {
           //  if response 200 redirect user to chat
           if (object.status === 200) {
-            console.log(object.data);
             updateLoggedInUser(
               object.data.userId,
               object.data.username,
@@ -74,7 +73,7 @@ function LoginPage() {
 
   const registerUser = () => {
     if (user.username !== "" && user.password !== "") {
-      fetch("http://127.0.0.1:3000/register", {
+      fetch("http://127.0.0.1:3000/api/v1/auth/register", {
         method: "post",
         headers: {
           "Content-Type": "application/json",

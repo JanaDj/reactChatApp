@@ -1,4 +1,4 @@
-const db = require("./index");
+const db = require("../index");
 const { Chat } = db.models;
 
 /**
@@ -6,9 +6,17 @@ const { Chat } = db.models;
  * @param {string} chatName , name of the new chat to create
  */
 async function createChat(chatName) {
-  const chat = await Chat.create({
-    chatName
+  // check if chat already exists:
+  let chat = await Chat.findOne({
+    where: {
+      chatName
+    }
   });
+  if (chat === null) {
+    chat = await Chat.create({
+      chatName
+    });
+  }
   return chat.get();
 }
 

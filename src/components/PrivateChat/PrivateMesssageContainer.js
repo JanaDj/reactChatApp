@@ -1,12 +1,19 @@
 import React from "react";
-
+import Message from "../ChatPage/Message";
 import ScrollToBottom from "react-scroll-to-bottom";
 
-function PrivateMessageContainer({ messages, name }) {
+function PrivateMessageContainer({ messages, name, chatId }) {
   return (
     <ScrollToBottom>
-      {/* {messages &&
-        messages.map((msg, i) => <Message key={i} message={msg} name={name} />)} */}
+      {console.log("poruke koje vidi container " + typeof messages)}
+      {messages &&
+        messages.map((msg, i) =>
+          msg.chatId === chatId ? (
+            <Message key={i} message={msg} name={name} />
+          ) : // />
+          null
+        )}
+      {/*  */}
     </ScrollToBottom>
   );
 }

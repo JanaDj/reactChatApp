@@ -1,14 +1,15 @@
-import React from "react";
-import styles from "../../styles/ChatPageStyle.module.css";
+import React, { useContext } from "react";
 import Message from "./Message";
-
+import { ChatPageContext } from "../../Context/ChatPageContext";
 import ScrollToBottom from "react-scroll-to-bottom";
 
-function MessagesContainer({ messages, name }) {
+function MessagesContainer({ name }) {
+  const { messages, updateMessages } = useContext(ChatPageContext);
   return (
     <ScrollToBottom>
       {messages &&
         messages.map((msg, i) => <Message key={i} message={msg} name={name} />)}
+      {/*  */}
     </ScrollToBottom>
   );
 }

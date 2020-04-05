@@ -72,7 +72,6 @@ async function getFormattedMessagesByChatId(chatId) {
   });
   // process messages before returning them:
   const formattedMsgs = messages.map(message => {
-    console.log(message["User.userId"]);
     return {
       message: message.messageText,
       name: message["User.username"]

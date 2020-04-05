@@ -6,6 +6,7 @@ import MessagesContainer from "./MessagesContainer";
 import styles from "../../styles/ChatPageStyle.module.css";
 import PrivateChatWindow from "../PrivateChat/PrivateChatWindow";
 import { UserContext } from "../../Context/UserContext";
+import { ChatPageContext } from "../../Context/ChatPageContext";
 import io from "socket.io-client";
 
 let socket;
@@ -14,13 +15,15 @@ function ChatPage({ location, history }) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState({
     message: "",
-    name: ""
+    name: "",
   });
-  const [messages, setMessages] = useState([]);
+  // const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [displayPrivateChat, setDisplayPrivateChat] = useState([]);
 
   const { loggedInUser, updateLoggedInUser } = useContext(UserContext);
+  const { messages, updateMessages } = useContext(ChatPageContext);
+
   const ENDPOINT = "http://127.0.0.1:3000";
 
   // triggered on component load
@@ -38,7 +41,7 @@ function ChatPage({ location, history }) {
         "new-user",
         loggedInUser.username,
         loggedInUser.userId,
-        error => {
+        (error) => {
           if (error) {
             alert("Error trying to connect to the chat");
           }
@@ -53,53 +56,77 @@ function ChatPage({ location, history }) {
 
   // handling messages
   useEffect(() => {
-    socket.on("user-connected", data => {
-      setMessages([
-        ...messages,
-        { message: `${data} joined the channel`, name: "chatAdmin" }
+    socket.on("user-connected", (data) => {
+      updateMessages([
+        { message: `${data} joined the channel`, name: "chatAdmin" },
       ]);
+      // const msg = `${data} joined the channel`;
+      // const name = "chatAdmin";
+      // updateMessages(msg, name);
     });
 
-    socket.on("user-disconnected", data => {
-      setMessages([
-        ...messages,
-        { message: `${data} has left the channel`, name: "chatAdmin" }
+    socket.on("user-disconnected", (data) => {
+      updateMessages([
+        { message: `${data} has left the channel`, name: "chatAdmin" },
       ]);
+      // const msg = `${data} has left the channel`;
+      // const name = "chatAdmin";
+      // updateMessages(msg, name);
     });
 
-    socket.on("chat-message", data => {
-      setMessages([...messages, data]);
+    socket.on("chat-message", (data) => {
+      updateMessages(data);
+      // const msg = `${data} has left the channel`;
+      // const name = "chatAdmin";
+      // updateMessages(msg, name);
     });
 
     socket.on("roomData", ({ users }) => {
       setUsers(users);
     });
 
-    socket.on("start-private-chat", data => {
+    socket.on("start-private-chat", (sender, chatId) => {
       setDisplayPrivateChat([
         ...displayPrivateChat,
         {
-          senderName: data.name
-        }
+          senderName: sender.name,
+          chatId,
+        },
       ]);
+      console.log(chatId);
     });
-  }, [messages, displayPrivateChat]);
+  }, [messages, displayPrivateChat, updateMessages]);
 
   /**
    * Function to handle onClick event to send public chat message
    * @param {*} event
    */
-  const sendMessage = event => {
+  const sendMessage = (event) => {
     event.preventDefault();
     if (message) {
-      setMessages([...messages, { message: message, name: name }]);
+      updateMessages({ message: message, name: name });
       socket.emit("send-chat-message", message, loggedInUser.userId, () => {
         setMessage({
           ...message,
-          message: ""
+          message: "",
         });
       });
     }
+  };
+
+  /**
+   * Function to handle onClick event to send public chat message
+   * @param {*} event
+   */
+  const sendLink = (event, message) => {
+    event.preventDefault();
+    updateMessages({ message: message, name: name });
+    socket.emit("send-chat-message", message, loggedInUser.userId, () => {
+      setMessage({
+        ...message,
+        message: "",
+      });
+    });
   };
   /**
    * Function to get chat history for public chat
@@ -107,44 +134,14 @@ function ChatPage({ location, history }) {
    * This end point returns array of messages
    */
   function getPublicMessages() {
-    fetch("http://127.0.0.1:3000/getpublicmessages")
-      .then(response => {
+    fetch("http://127.0.0.1:3000/api/v1/messages/getpublicmessages")
+      .then((response) => {
         return response.json();
       })
-      .then(data => {
-        console.log(data);
-        setMessages(data);
-        // data.array.forEach(element => {
-        //   setMessages({
-        //     ...messages,
-
-        //   })
-
-        // });
-        console.log(messages);
+      .then((data) => {
+        updateMessages(data);
       });
   }
-  // /**
-  //  * Function to add chat-user relation to the chatuser table
-  //  * @param {int} chatId id of the chat user is joining
-  //  * @param {int} userId id of the user that is joining the chat
-  //  */
-  // function addUserToChat(chatId, userId) {
-  //   fetch("http://127.0.0.1:3000/chatuser", {
-  //     method: "post",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Accept: "application/json"
-  //     },
-  //     body: JSON.stringify({
-  //       chatId,
-  //       userId
-  //     })
-  //   }).catch(error => {
-  //     //  handle error
-  //     console.log("error adding chat-user relation", error);
-  //   });
-  // }
   /**
    * Function to handle input onChange event
    * @param {*} target ,
@@ -157,22 +154,26 @@ function ChatPage({ location, history }) {
    * Function to handle onClick event for the 'Chat' link in the active users chat
    * @param {user} receiver , object of type user, contains id and name
    */
-  const onClickChat = receiver => {
-    console.log(receiver.name);
+  const onClickChat = (receiver) => {
     // emit socket event za private chat
     if (receiver.name !== name) {
       if (
         !displayPrivateChat.some(
-          privateChat => privateChat.senderName === receiver.name
+          (privateChat) => privateChat.senderName === receiver.name
         )
       ) {
-        socket.emit("privateChat", receiver.id);
-        setDisplayPrivateChat([
-          ...displayPrivateChat,
-          {
-            senderName: receiver.name
-          }
-        ]);
+        socket.emit("privateChat", receiver.id, (chatId) => {
+          console.log(
+            "primljen chatId sa privateChat eventa sa servera je: " + chatId
+          );
+          setDisplayPrivateChat([
+            ...displayPrivateChat,
+            {
+              senderName: receiver.name,
+              chatId,
+            },
+          ]);
+        });
       }
     }
   };
@@ -183,12 +184,13 @@ function ChatPage({ location, history }) {
       <div className={`${styles.chatWrapper}`}>
         <div className={`${styles.chatContainer}`}>
           <div className={styles.messagesContainer}>
-            <MessagesContainer messages={messages} name={name} />
+            <MessagesContainer name={name} />
           </div>
           <ChatMessage
             message={message}
             onChange={handleChange}
             sendMessage={sendMessage}
+            sendLink={sendLink}
           />
         </div>
         <div className={`${styles.chatListContainer}`}>
@@ -199,12 +201,11 @@ function ChatPage({ location, history }) {
             {displayPrivateChat.length > 0 &&
               displayPrivateChat.map((chat, i) => (
                 <PrivateChatWindow
-                  // sendMessage={sendPrivateMessage}
-                  // messages={privateMessages}
                   socket={socket}
                   key={i}
-                  senderName={name}
                   name={chat.senderName}
+                  chatId={chat.chatId}
+                  senderName={name}
                 />
               ))}
           </div>

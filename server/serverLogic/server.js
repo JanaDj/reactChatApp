@@ -4,23 +4,45 @@ const http = require("http").createServer(app);
 const io = (module.exports.io = require("socket.io")(http));
 const port = process.env.PORT || 3000;
 const cors = require("cors");
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
+// configure swagger
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      title: "Chat App API",
+      description: "API used to manage Chat App related data",
+      contact: {
+        name: "Jana"
+      },
+      servers: ["http://localhost:3000"]
+    }
+  },
+  apis: ["../Routes/*.js"]
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // db reated
 const db = require("../db");
-const { Chat, ChatUser, Message, User } = db.models;
-const { Op } = db.Sequelize;
-
-const Sequelize = require("sequelize");
-const sequelize = new Sequelize("chatapp", "root", "", {
-  host: "127.0.0.1",
-  dialect: "mysql"
-});
 
 app.use(cors());
 app.options("*", cors());
-const router = require("./router");
 app.use(express.json());
+
+// routers
+const router = require("../Routes/router");
+const authRouter = require("../Routes/AuthRoute");
+const chatuserRouter = require("../Routes/ChatUserRoute");
+const fileUploadRouter = require("../Routes/FileUploadRoute");
+const messagesRouter = require("../Routes/MessagesRoute");
+// routes
 app.use(router);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/chatuser", chatuserRouter);
+app.use("/api/v1/fileupload", fileUploadRouter);
+app.use("/api/v1/messages", messagesRouter);
 
 const socketManager = require("./socketManager");
 
@@ -43,6 +65,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// db
 (async () => {
   try {
     await db.sequelize.sync();

@@ -1,7 +1,8 @@
 import React from "react";
 import styles from "../../styles/ChatPageStyle.module.css";
+import FileUpload from "./FileUpload";
 
-function ChatMessage({ message, onChange, sendMessage }) {
+function ChatMessage({ message, onChange, sendMessage, sendLink }) {
   return (
     <div className={styles.messageBox}>
       {/* <div class="row"> */}
@@ -22,6 +23,7 @@ function ChatMessage({ message, onChange, sendMessage }) {
               Message
             </button>
           </div>
+          <FileUpload sendLink={sendLink} />
         </div>
       </form>
       {/* </div> */}
