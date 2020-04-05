@@ -7,9 +7,9 @@ const path = require("path");
 const app = express();
 
 aws.config.update({
-  secretAccessKey: "Nhfu0DsSreewFng5M3JnbnSR1mZHwHD6coGI09mP",
-  accessKeyId: "AKIAJDQ5Y2S7LNYRRX3Q",
-  region: "eu-central-1"
+  secretAccessKey: "",
+  accessKeyId: "",
+  region: "eu-central-1",
 });
 
 const s3 = new aws.S3();
@@ -29,15 +29,15 @@ const upload = multer({
     s3,
     bucket: "reactchatapp",
     acl: "public-read",
-    metadata: function(req, file, cb) {
+    metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
-    key: function(req, file, cb) {
+    key: function (req, file, cb) {
       // appending file extension to the file name
       const fileName = Date.now().toString() + path.extname(file.originalname);
       cb(null, fileName);
-    }
-  })
+    },
+  }),
 });
 
 module.exports = upload;
